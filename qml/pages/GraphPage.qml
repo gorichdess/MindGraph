@@ -8,8 +8,8 @@ Page {
 
     property StackView stackViewRef
 
-    property bool linkMode: false
-    property string firstLinkNoteId: ""
+    property string graphMode: "none" // none, link, unlink
+    property string firstSelectedNoteId: ""
 
     background: Rectangle {
         color: Theme.backgroundColor
@@ -30,6 +30,29 @@ Page {
                 height: 44
                 placeholderText: "New note title"
                 font.pointSize: 14
+            }
+
+            AppButton {
+                text: graphPage.graphMode === "link" ? "Link: ON" : "Link"
+                width: 100
+                secondary: graphPage.graphMode !== "link"
+
+                onClicked: {
+                    graphPage.graphMode = graphPage.graphMode === "link" ? "none" : "link"
+                    graphPage.firstSelectedNoteId = ""
+                }
+            }
+
+            AppButton {
+                text: graphPage.graphMode === "unlink" ? "Unlink: ON" : "Unlink"
+                width: 120
+                secondary: graphPage.graphMode !== "unlink"
+                danger: graphPage.graphMode === "unlink"
+
+                onClicked: {
+                    graphPage.graphMode = graphPage.graphMode === "unlink" ? "none" : "unlink"
+                    graphPage.firstSelectedNoteId = ""
+                }
             }
 
             AppButton {
@@ -81,6 +104,35 @@ Page {
                             content: model.content
                             x: model.noteX
                             y: model.noteY
+
+                            linkMode: graphPage.graphMode !== "none"
+                            selectedForLink: graphPage.firstSelectedNoteId === model.noteId
+
+                            onNodeClicked: function(noteId) {
+                                if (graphPage.graphMode === "none") {
+                                    return
+                                }
+
+                                if (graphPage.firstSelectedNoteId === "") {
+                                    graphPage.firstSelectedNoteId = noteId
+                                    return
+                                }
+
+                                if (graphPage.firstSelectedNoteId === noteId) {
+                                    graphPage.firstSelectedNoteId = ""
+                                    return
+                                }
+
+                                if (graphPage.graphMode === "link") {
+                                    graphController.createEdge(graphPage.firstSelectedNoteId, noteId)
+                                }
+
+                                if (graphPage.graphMode === "unlink") {
+                                    graphController.deleteEdgeBetween(graphPage.firstSelectedNoteId, noteId)
+                                }
+
+                                graphPage.firstSelectedNoteId = ""
+                            }
 
                             onOpenRequested: function(noteId, title, content) {
                                 graphPage.stackViewRef.push("NoteEditorPage.qml", {

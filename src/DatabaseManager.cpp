@@ -292,3 +292,24 @@ bool DatabaseManager::deleteEdgesForNote(const QString &noteId)
 
     return true;
 }
+
+bool DatabaseManager::deleteEdgeBetween(const QString &fromNoteId, const QString &toNoteId)
+{
+    QSqlQuery query(m_database);
+
+    query.prepare(
+        "DELETE FROM edges "
+        "WHERE (from_note_id = :from AND to_note_id = :to) "
+        "OR (from_note_id = :to AND to_note_id = :from)"
+        );
+
+    query.bindValue(":from", fromNoteId);
+    query.bindValue(":to", toNoteId);
+
+    if (!query.exec()) {
+        qWarning() << "Delete edge error:" << query.lastError().text();
+        return false;
+    }
+
+    return query.numRowsAffected() > 0;
+}

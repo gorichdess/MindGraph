@@ -162,3 +162,10 @@ void GraphController::createLinkedNote(const QString &fromNoteId, const QString 
         reloadData();
     }
 }
+
+void GraphController::deleteEdgeBetween(const QString &fromNoteId, const QString &toNoteId)
+{
+    if (m_databaseManager.deleteEdgeBetween(fromNoteId, toNoteId)) {
+        reloadData();
+    }
+}

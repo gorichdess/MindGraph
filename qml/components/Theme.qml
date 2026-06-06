@@ -23,5 +23,7 @@ QtObject {
     readonly property color buttonSecondaryTextColor: "#3A2430"
 
     readonly property color edgeColor: "#D96A9F"
-    readonly property color selectedNodeBorderColor: "#D96A9F"
+    readonly property color linkModeBorderColor: "#E78AB3"
+    readonly property color selectedNodeBorderColor: "#D94A9F"
+    readonly property color selectedNodeBackgroundColor: "#FFF0F7"
 }

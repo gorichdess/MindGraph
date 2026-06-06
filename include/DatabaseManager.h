@@ -24,6 +24,7 @@ public:
     QVector<Edge> loadEdges();
     bool addEdge(const QString &fromNoteId, const QString &toNoteId);
     bool edgeExists(const QString &fromNoteId, const QString &toNoteId);
+    bool deleteEdgeBetween(const QString &fromNoteId, const QString &toNoteId);
     bool deleteEdgesForNote(const QString &noteId);
 
 private:

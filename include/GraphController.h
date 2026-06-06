@@ -21,6 +21,7 @@ public:
     Q_INVOKABLE void deleteNote(const QString &id);
     Q_INVOKABLE void createEdge(const QString &fromNoteId, const QString &toNoteId);
     Q_INVOKABLE void createLinkedNote(const QString &fromNoteId, const QString &title);
+    Q_INVOKABLE void deleteEdgeBetween(const QString &fromNoteId, const QString &toNoteId);
 
 
 private:
