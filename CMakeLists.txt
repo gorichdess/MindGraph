@@ -22,10 +22,13 @@ qt_add_executable(MindGraphApp
     include/DatabaseManager.h
     include/NotesModel.h
     include/GraphController.h
+    include/Edge.h
+    include/EdgesModel.h
 
     src/DatabaseManager.cpp
     src/NotesModel.cpp
     src/GraphController.cpp
+    src/EdgesModel.cpp
 )
 
 target_include_directories(MindGraphApp PRIVATE
@@ -45,6 +48,7 @@ qt_add_qml_module(MindGraphApp
         qml/components/Theme.qml
         qml/components/AppTextField.qml
         qml/components/AppTextArea.qml
+        qml/components/GraphEdge.qml
 )
 
 target_link_libraries(MindGraphApp

@@ -15,6 +15,7 @@ int main(int argc, char *argv[])
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("graphController", &graphController);
     engine.rootContext()->setContextProperty("notesModel", graphController.notesModel());
+    engine.rootContext()->setContextProperty("edgesModel", graphController.edgesModel());
 
     QObject::connect(
         &engine,

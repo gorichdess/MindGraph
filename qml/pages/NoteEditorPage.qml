@@ -63,6 +63,31 @@ Page {
             font.pointSize: 14
         }
 
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 8
+
+            AppTextField {
+                id: linkedNoteTitleInput
+                Layout.fillWidth: true
+                placeholderText: "Linked note title"
+            }
+
+            AppButton {
+                text: "Create linked note"
+                width: 170
+
+                onClicked: {
+                    graphController.createLinkedNote(
+                        noteEditorPage.noteId,
+                        linkedNoteTitleInput.text
+                    )
+
+                    linkedNoteTitleInput.text = ""
+                }
+            }
+        }
+
         AppButton {
             text: "Save"
             Layout.fillWidth: true

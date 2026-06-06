@@ -46,9 +46,9 @@ bool DatabaseManager::openDatabase()
 
 bool DatabaseManager::createTables()
 {
-    QSqlQuery query(m_database);
+    QSqlQuery notesQuery(m_database);
 
-    const QString sql = R"(
+    const QString notesSql = R"(
         CREATE TABLE IF NOT EXISTS notes (
             id TEXT PRIMARY KEY,
             title TEXT NOT NULL,
@@ -62,8 +62,49 @@ bool DatabaseManager::createTables()
         )
     )";
 
-    if (!query.exec(sql)) {
-        qWarning() << "Create table error:" << query.lastError().text();
+    if (!notesQuery.exec(notesSql)) {
+        qWarning() << "Create notes table error:" << notesQuery.lastError().text();
+        return false;
+    }
+
+    QSqlQuery edgesQuery(m_database);
+
+    const QString edgesSql = R"(
+        CREATE TABLE IF NOT EXISTS edges (
+            id TEXT PRIMARY KEY,
+            from_note_id TEXT NOT NULL,
+            to_note_id TEXT NOT NULL,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            sync_status TEXT DEFAULT 'pending',
+            FOREIGN KEY (from_note_id) REFERENCES notes(id),
+            FOREIGN KEY (to_note_id) REFERENCES notes(id)
+        )
+    )";
+
+    if (!edgesQuery.exec(edgesSql)) {
+        qWarning() << "Create edges table error:" << edgesQuery.lastError().text();
+        return false;
+    }
+
+    return true;
+}
+
+bool DatabaseManager::updateNotePosition(const QString &id, double x, double y)
+{
+    QSqlQuery query(m_database);
+
+    query.prepare(
+        "UPDATE notes "
+        "SET x = :x, y = :y, updated_at = CURRENT_TIMESTAMP "
+        "WHERE id = :id"
+        );
+
+    query.bindValue(":x", x);
+    query.bindValue(":y", y);
+    query.bindValue(":id", id);
+
+    if (!query.exec()) {
+        qWarning() << "Update note position error:" << query.lastError().text();
         return false;
     }
 
@@ -157,6 +198,95 @@ bool DatabaseManager::deleteNote(const QString &id)
 
     if (!query.exec()) {
         qWarning() << "Delete note error:" << query.lastError().text();
+        return false;
+    }
+
+    return true;
+}
+
+QVector<Edge> DatabaseManager::loadEdges()
+{
+    QVector<Edge> edges;
+
+    QSqlQuery query(m_database);
+    query.prepare("SELECT id, from_note_id, to_note_id FROM edges");
+
+    if (!query.exec()) {
+        qWarning() << "Failed to load edges:" << query.lastError().text();
+        return edges;
+    }
+
+    while (query.next()) {
+        Edge edge;
+        edge.id = query.value("id").toString();
+        edge.fromNoteId = query.value("from_note_id").toString();
+        edge.toNoteId = query.value("to_note_id").toString();
+
+        edges.append(edge);
+    }
+
+    return edges;
+}
+
+bool DatabaseManager::edgeExists(const QString &fromNoteId, const QString &toNoteId)
+{
+    QSqlQuery query(m_database);
+    query.prepare(
+        "SELECT COUNT(*) FROM edges "
+        "WHERE (from_note_id = :from AND to_note_id = :to) "
+        "OR (from_note_id = :to AND to_note_id = :from)"
+        );
+
+    query.bindValue(":from", fromNoteId);
+    query.bindValue(":to", toNoteId);
+
+    if (!query.exec() || !query.next()) {
+        return false;
+    }
+
+    return query.value(0).toInt() > 0;
+}
+
+bool DatabaseManager::addEdge(const QString &fromNoteId, const QString &toNoteId)
+{
+    if (fromNoteId.isEmpty() || toNoteId.isEmpty() || fromNoteId == toNoteId) {
+        return false;
+    }
+
+    if (edgeExists(fromNoteId, toNoteId)) {
+        return false;
+    }
+
+    QSqlQuery query(m_database);
+    query.prepare(
+        "INSERT INTO edges (id, from_note_id, to_note_id, created_at) "
+        "VALUES (:id, :from, :to, datetime('now'))"
+        );
+
+    query.bindValue(":id", QUuid::createUuid().toString(QUuid::WithoutBraces));
+    query.bindValue(":from", fromNoteId);
+    query.bindValue(":to", toNoteId);
+
+    if (!query.exec()) {
+        qWarning() << "Failed to add edge:" << query.lastError().text();
+        return false;
+    }
+
+    return true;
+}
+
+bool DatabaseManager::deleteEdgesForNote(const QString &noteId)
+{
+    QSqlQuery query(m_database);
+    query.prepare(
+        "DELETE FROM edges "
+        "WHERE from_note_id = :noteId OR to_note_id = :noteId"
+        );
+
+    query.bindValue(":noteId", noteId);
+
+    if (!query.exec()) {
+        qWarning() << "Failed to delete edges for note:" << query.lastError().text();
         return false;
     }
 

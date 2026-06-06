@@ -8,6 +8,9 @@ Page {
 
     property StackView stackViewRef
 
+    property bool linkMode: false
+    property string firstLinkNoteId: ""
+
     background: Rectangle {
         color: Theme.backgroundColor
     }
@@ -57,6 +60,17 @@ Page {
                     id: graphCanvas
                     width: flickable.contentWidth
                     height: flickable.contentHeight
+
+                    Repeater {
+                        model: edgesModel
+
+                        GraphEdge {
+                            fromX: model.fromX
+                            fromY: model.fromY
+                            toX: model.toX
+                            toY: model.toY
+                        }
+                    }
 
                     Repeater {
                         model: notesModel
